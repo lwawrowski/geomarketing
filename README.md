@@ -1,1 +1,3 @@
-# geomarketing
+# Geomarketing
+
+Materiały dydaktyczne

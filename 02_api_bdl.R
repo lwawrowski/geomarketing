@@ -1,6 +1,5 @@
 library(tidyverse)
 library(jsonlite)
-library(purrr)
 library(sf)
 
 woj <- read_sf("mapy/woj.shp")

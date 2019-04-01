@@ -80,3 +80,5 @@ summary(min_atm)
 
 ggplot(min_atm, aes(x=min_odl)) +
   geom_histogram(binwidth = 500)
+
+#

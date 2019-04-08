@@ -48,3 +48,65 @@ ggplot(wybory_pow_kw_g) +
   theme(legend.position = "bottom") +
   ggsave("mapa_wybory.png", width = 11, height = 11)
 
+library(spdep)
+
+pow_nb <- poly2nb(pow)
+pow_nb_list <- nb2listw(pow_nb)
+pow_nb_matrix <- nb2mat(pow_nb)
+pow_nb_matrix[1:10,1:10]
+
+# statystyka Morana
+
+# frekwencja
+
+moran.test(x = wybory$frekwencja, listw = pow_nb_list)
+
+moran.plot(x = wybory$frekwencja, listw = pow_nb_list)
+
+wybory$frekwencja_z <- as.numeric(scale(wybory$frekwencja))
+
+moran.plot(x = wybory$frekwencja_z, listw = pow_nb_list)
+
+wybory$frekwencja_lag <- lag.listw(x = pow_nb_list, var = wybory$frekwencja_z)
+
+plot(wybory$frekwencja_z, wybory$frekwencja_lag)
+
+wybory$frekwencja_cw <- ifelse(wybory$frekwencja_z > 0 & wybory$frekwencja_lag > 0,
+                               "wysokie wartości otoczone wysokimi", 
+                               ifelse(wybory$frekwencja_z < 0 & wybory$frekwencja_lag > 0,
+                                      "niskie wartości otoczone wysokimi",
+                                      ifelse(wybory$frekwencja_z < 0 & wybory$frekwencja_lag < 0,
+                                             "niskie wartości otoczone niskimi", "wysokie wartości otoczone niskimi")))
+
+table(wybory$frekwencja_cw)
+
+wybory_pow <- inner_join(wybory, pow, by = c("teryt"="jpt_kod_je"))
+
+ggplot(wybory_pow) + geom_sf(aes(fill=frekwencja_cw))
+
+# pis
+
+moran.test(x = wybory$kw_prawo_i_sprawiedliwosc, listw = pow_nb_list)
+
+moran.plot(x = wybory$kw_prawo_i_sprawiedliwosc, listw = pow_nb_list)
+
+wybory$kw_prawo_i_sprawiedliwosc_z <- as.numeric(scale(wybory$kw_prawo_i_sprawiedliwosc))
+
+moran.plot(x = wybory$kw_prawo_i_sprawiedliwosc_z, listw = pow_nb_list)
+
+wybory$kw_prawo_i_sprawiedliwosc_lag <- lag.listw(x = pow_nb_list, var = wybory$kw_prawo_i_sprawiedliwosc_z)
+
+plot(wybory$kw_prawo_i_sprawiedliwosc_z, wybory$kw_prawo_i_sprawiedliwosc_lag)
+
+wybory$kw_prawo_i_sprawiedliwosc_cw <- ifelse(wybory$kw_prawo_i_sprawiedliwosc_z > 0 & wybory$kw_prawo_i_sprawiedliwosc_lag > 0,
+                               "wysokie wartości otoczone wysokimi", 
+                               ifelse(wybory$kw_prawo_i_sprawiedliwosc_z < 0 & wybory$kw_prawo_i_sprawiedliwosc_lag > 0,
+                                      "niskie wartości otoczone wysokimi",
+                                      ifelse(wybory$kw_prawo_i_sprawiedliwosc_z < 0 & wybory$kw_prawo_i_sprawiedliwosc_lag < 0,
+                                             "niskie wartości otoczone niskimi", "wysokie wartości otoczone niskimi")))
+
+table(wybory$kw_prawo_i_sprawiedliwosc_cw)
+
+wybory_pow <- inner_join(wybory, pow, by = c("teryt"="jpt_kod_je"))
+
+ggplot(wybory_pow) + geom_sf(aes(fill=kw_prawo_i_sprawiedliwosc_cw))

@@ -10,8 +10,13 @@
 library(shiny)
 library(tidyverse)
 library(leaflet)
+library(lubridate)
 
 load("acc.RData")
+
+districts <- readxl::read_xlsx("districts.xlsx")
+
+acc <- inner_join(acc, districts, by = c("local_authority_district" = "code"))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -22,11 +27,14 @@ ui <- fluidPage(
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
+            selectInput(inputId = "districtSelect",
+                        label = "District:",
+                        choices = sort(unique(acc$label))),
             sliderInput(inputId = "casualtiesSlider", 
                         label = "Number of casualties:",
                         min = min(acc$number_of_casualties),
                         max = max(acc$number_of_casualties),
-                        value = max(acc$number_of_casualties),
+                        value = min(acc$number_of_casualties),
                         step = 1),
             radioButtons(inputId = "speedRadio",
                          label = "Speed limit",
@@ -38,39 +46,57 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(
-           leafletOutput(outputId = "map")
+           leafletOutput(outputId = "map"),
+           verbatimTextOutput(outputId = "text")
         )
     )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+    
+    output$text <- renderPrint({
+        
+        input$map_marker_click
+        
+    })
 
     output$map <- renderLeaflet({
         
         d <- acc %>%
-            filter(local_authority_district == 1,
+            filter(label == input$districtSelect,
                    number_of_casualties == input$casualtiesSlider,
                    speed_limit == input$speedRadio,
-                   number_of_vehicles == input$vehiclesSelect)
+                   number_of_vehicles == input$vehiclesSelect) %>%
+            mutate(group = ifelse(accident_severity == 1, "red", 
+                                  ifelse(accident_severity == 2, "orange", "green")))
+        
+        icons <- iconList(
+            red = makeIcon(iconUrl = "skull_red.png", iconWidth = 24, iconHeight = 24),
+            orange = makeIcon(iconUrl = "skull_orange.png", iconWidth = 24, iconHeight = 24),
+            green = makeIcon(iconUrl = "skull_green.png", iconWidth = 24, iconHeight = 24)
+        )
         
         leaflet(d) %>%
             addTiles() %>%
-            addMarkers(lng = ~longitude, lat = ~latitude)
+            addMarkers(lng = ~longitude, 
+                       lat = ~latitude,
+                       icon = ~icons[group], 
+                       layerId = ~d_z_accident_index)
         
     })
     
     observeEvent(input$speedRadio, {
         
         d <- acc %>%
-            filter(local_authority_district == 1,
+            filter(label == input$districtSelect,
                    speed_limit == input$speedRadio)
         
         updateSliderInput(session = session,
                           inputId = "casualtiesSlider",
                           min = min(d$number_of_casualties),
                           max = max(d$number_of_casualties),
-                          value = max(d$number_of_casualties))
+                          value = min(d$number_of_casualties))
         
         updateSelectInput(session = session,
                           inputId = "vehiclesSelect",

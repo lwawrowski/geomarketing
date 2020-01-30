@@ -5,6 +5,10 @@ library(janitor)
 
 pow <- read_sf("mapy/powiaty.shp")
 
+st_crs(pow)
+
+pow <- st_set_crs(pow, 2177)
+
 wybory <- read_xlsx("data/2018-sejmiki-po-powiatach-proc.xlsx")
 
 wybory <- clean_names(wybory)
@@ -13,7 +17,7 @@ wybory_pow <- inner_join(wybory, pow, by = c("teryt"="jpt_kod_je"))
 
 # frekwencja
 
-ggplot(wybory_pow) + geom_sf(aes(fill=frekwencja))
+ggplot(wybory_pow) + geom_sf(aes(fill=frekwencja, geometry=geometry))
 
 # poparcie dla 9 partii
 
@@ -110,3 +114,12 @@ table(wybory$kw_prawo_i_sprawiedliwosc_cw)
 wybory_pow <- inner_join(wybory, pow, by = c("teryt"="jpt_kod_je"))
 
 ggplot(wybory_pow) + geom_sf(aes(fill=kw_prawo_i_sprawiedliwosc_cw))
+
+# upraszczanie mapy
+
+pow_gugik <- read_sf("mapy/gugik/Powiaty.shp")
+pow_gugik <- st_transform(pow_gugik, 2177)
+pow_gugik_small <- tmaptools::simplify_shape(pow_gugik, fact = 0.1, keep.units = T)
+pow_gugik_small_sp <- as_Spatial(pow_gugik_small)
+rgdal::writeOGR(pow_gugik_small_sp, ".", "mapy/gugik/pow_gugik_small", driver="ESRI Shapefile")
+

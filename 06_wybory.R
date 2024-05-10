@@ -28,7 +28,7 @@ wybory_long <- wybory %>%
 wybory_pow2 <- left_join(wybory_long, pow, by = c("teryt"="jpt_kod_je"))
 
 ggplot(wybory_pow2) + 
-  geom_sf(aes(fill=poparcie)) +
+  geom_sf(aes(fill=poparcie, geometry=geometry)) +
   facet_wrap(~ kw)
 
 # wygrana partia w powiecie
@@ -46,11 +46,12 @@ wybory_pow_kw <- left_join(wybory_pow_max, wybory_long_all, by=c("teryt", "max_p
 wybory_pow_kw_g <- inner_join(wybory_pow_kw, pow, by = c("teryt"="jpt_kod_je"))
 
 ggplot(wybory_pow_kw_g) + 
-  geom_sf(aes(fill=kw)) +
+  geom_sf(aes(fill=kw, geometry = geometry)) +
   scale_fill_brewer(name = "", palette = "Set3") +
   theme_minimal() +
-  theme(legend.position = "bottom") +
-  ggsave("mapa_wybory.png", width = 11, height = 11)
+  theme(legend.position = "bottom") 
+
+ggsave("mapa_wybory.png", width = 11, height = 11)
 
 library(spdep)
 

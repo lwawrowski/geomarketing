@@ -48,7 +48,7 @@ wybory_pow_kw_g <- inner_join(wybory_pow_kw, pow, by = c("teryt"="jpt_kod_je"))
 ggplot(wybory_pow_kw_g) + 
   geom_sf(aes(fill=kw, geometry = geometry)) +
   scale_fill_brewer(name = "", palette = "Set3") +
-  theme_minimal() +
+  theme_void() +
   theme(legend.position = "bottom") 
 
 ggsave("mapa_wybory.png", width = 11, height = 11)
